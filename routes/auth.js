@@ -1,56 +1,56 @@
 const express = require('express');
 const router = express.Router();
-const Key = require('../models/key');
-const rateLimiter = require('../middleware/rateLimiter');
-const connectToDatabase = require('../Database'); // ← NEU
 
-router.post('/generate-key', rateLimiter, async (req, res) => {
-    await connectToDatabase(); // ← NEU
-    const { key, duration } = req.body;
+const User = require('../models/user');
+
+const rateLimiter = require('../middleware/rateLimiter');
+
+const checkAndDeleteExpired = require('../middleware/checkAndDeleteExpired');
+
+router.post('/auth', rateLimiter, checkAndDeleteExpired, async (req, res) => {
+    console.log('Requisição recebida em /auth:', req.body);
+    const { hwid, username, password } = req.body;
 
     try {
-        let expirationDate;
+        let user = await User.findOne({ hwid });
 
-        switch (duration) {
-            case '1day':
-                expirationDate = new Date();
-                expirationDate.setDate(expirationDate.getDate() + 1);
-                break;
-            case '1week':
-                expirationDate = new Date();
-                expirationDate.setDate(expirationDate.getDate() + 7);
-                break;
-            case '1month':
-                expirationDate = new Date();
-                expirationDate.setMonth(expirationDate.getMonth() + 1);
-                break;
-            case '3month':
-                expirationDate = new Date();
-                expirationDate.setMonth(expirationDate.getMonth() + 3);
-                break;
-            case 'permanent':
-                expirationDate = new Date();
-                expirationDate.setFullYear(expirationDate.getFullYear() + 100);
-                break;
-            case '10year':
-                expirationDate = new Date();
-                expirationDate.setFullYear(expirationDate.getFullYear() + 10);
-                break;
-            case '2min':
-                expirationDate = new Date();
-                expirationDate.setMinutes(expirationDate.getMinutes() + 2);
-                break;
-            default:
-                return res.status(400).json({ error: 'Invalid duration' });
+            if (!user && username ) {
+                user = await User.findOne({ username });
+            if (user) {
+                if (!user.hwid) {
+                    user.hwid = hwid;
+                    await user.save();
+                }
+            }
         }
 
-        const newKey = new Key({ key, expirationDate });
-        await newKey.save();
+        console.log('Usuário encontrado:', user);
 
-        res.json({ key: newKey.key });
+        if (!user) {
+            return res.status(404).json({ error: 'Discord ID não encontrado.' });
+        }
+
+        if (user.expirationDate < new Date()) {
+            await User.deleteOne({ hwid });
+            return res.status(403).json({ error: 'Login expirado. Por favor, renove seu login.' });
+        }
+
+        if (user.username === username) {
+            if (user.password) {
+                if (user.password === password) {
+                    return res.json({ message: 'Login bem-sucedido!' });
+                } else {
+                    return res.status(403).json({ error: 'Senha incorreta.' });
+                }
+            } else {
+                return res.json({ message: 'Login bem-sucedido!' });
+            }
+        } else {
+            return res.status(403).json({ error: 'Usuário Inválido.' });
+        }
     } catch (error) {
-        console.error('Erro ao salvar key:', error);
-        res.status(500).json({ error: 'Erro ao salvar key' });
+        console.error('Erro ao autenticar:', error);
+        res.status(500).json({ error: 'Erro ao autenticar.' });
     }
 });
 
