@@ -1,38 +1,26 @@
-require('colors')
-const mongoose = require('mongoose')
-require('dotenv').config({
-    path: "./.env"
-})
+require('colors');
+const mongoose = require('mongoose');
+require('dotenv').config({ path: "./.env" });
 
-console.log('MongoDB URI:', process.env.MONGODB_URL);
-
-mongoose.set('strictQuery', true);
+let cached = global.mongoose;
+if (!cached) cached = global.mongoose = { conn: null, promise: null };
 
 async function connectToDatabase() {
-    try {
-        await mongoose.connect(process.env.MONGODB_URL);
-        console.log("Sucesso ".green + 'Conectado ao MongoDB');
-        } catch (err) {
-        console.error("Falha ".red + 'Erro ao conectar ao MongoDB', err);
+    if (cached.conn) return cached.conn;
+
+    if (!cached.promise) {
+        cached.promise = mongoose.connect(process.env.MONGODB_URL, {
+            serverSelectionTimeoutMS: 30000,
+            socketTimeoutMS: 45000,
+            bufferCommands: false,
+        }).then(mongoose => {
+            console.log("Sucesso ".green + 'Conectado ao MongoDB');
+            return mongoose;
+        });
     }
+
+    cached.conn = await cached.promise;
+    return cached.conn;
 }
 
 module.exports = connectToDatabase;
-
-mongoose.connection.on('connected', () => {
-    console.log("Sucesso ".green + 'Mongoose conectado ao MongoDB');
-  });
-  
-  mongoose.connection.on('error', (err) => {
-    console.error("Falha ".red + 'Erro de conexão do Mongoose: ', err);
-  });
-  
-  mongoose.connection.on('disconnected', () => {
-    console.log("Falha ".red + 'Mongoose desconectado do MongoDB');
-  });
-  
-  process.on('SIGINT', async () => {
-    await mongoose.connection.close();
-    console.log("Falha ".red + 'Mongoose desconectado devido ao encerramento do aplicativo');
-    process.exit(0);
-  });
