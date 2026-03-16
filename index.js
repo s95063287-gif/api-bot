@@ -55,4 +55,3 @@ connectToDatabase().then(() => {
     );
 });
 
-MONGODB_URL = mongodb+srv://s95063287_db_user:<db_password>@cluster0.ditomhk.mongodb.net/?appName=Cluster0
