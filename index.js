@@ -32,6 +32,7 @@ const resethwidRoute = require('./routes/resethwid');
 const userInfoRoute = require('./routes/userinfo');
 const listUsersRoute = require('./routes/listusers');
 const extendLoginRoute = require('./routes/extendlogin');
+const configRoute = require('./routes/config');
 
 app.use('/api/add-login', AddLogin);
 app.use('/api/auth', authRoute);
@@ -42,6 +43,7 @@ app.use('/api/resethwid', resethwidRoute);
 app.use('/api/userinfo', userInfoRoute);
 app.use('/api/listusers', listUsersRoute);
 app.use('/api/extendlogin', extendLoginRoute);
+app.use('/api/config', configRoute);
 
 
 app.use((req, res) => {

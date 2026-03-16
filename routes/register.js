@@ -7,25 +7,30 @@ const connectToDatabase = require('../Database');
 
 router.post('/', rateLimiter, async (req, res) => {
     await connectToDatabase();
-    const { hwid, username, key, password } = req.body;
+    const { hwid, username, key, password, discordId } = req.body;
 
     try {
+        const existingUser = await User.findOne({ username });
+        if (existingUser) {
+            return res.status(400).json({ error: 'Username already taken.' });
+        }
+
         let validKey = await Key.findOne({ key, used: false, expirationDate: { $gte: new Date() } });
         if (!validKey) {
-            return res.status(403).json({ error: 'Chave inválida ou expirada.' });
+            return res.status(403).json({ error: 'Invalid or expired key.' });
         }
 
         validKey.used = true;
         await validKey.save();
 
         let expirationDate = new Date(validKey.expirationDate);
-        const user = new User({ hwid, username, expirationDate, password });
+        const user = new User({ hwid, username, expirationDate, password, discordId });
         await user.save();
 
-        res.json({ message: 'Login criado com sucesso', expirationDate });
+        res.json({ message: 'Registration successful!', expirationDate });
     } catch (error) {
-        console.error('Erro ao registrar:', error);
-        res.status(500).json({ error: 'Erro ao registrar.' });
+        console.error('Error registering:', error);
+        res.status(500).json({ error: 'Error registering.' });
     }
 });
 
