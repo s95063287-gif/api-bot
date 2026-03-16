@@ -14,8 +14,8 @@ router.post('/auth', rateLimiter, checkAndDeleteExpired, async (req, res) => {
     try {
         let user = await User.findOne({ hwid });
 
-            if (!user && username ) {
-                user = await User.findOne({ username });
+        if (!user && username) {
+            user = await User.findOne({ username });
             if (user) {
                 if (!user.hwid) {
                     user.hwid = hwid;
