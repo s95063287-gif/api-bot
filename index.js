@@ -29,6 +29,9 @@ const GenerateKey = require('./routes/generate-key');
 const Register = require('./routes/register');
 const RemoveLogin = require('./routes/remove-login');
 const resethwidRoute = require('./routes/resethwid');
+const userInfoRoute = require('./routes/userinfo');
+const listUsersRoute = require('./routes/listusers');
+const extendLoginRoute = require('./routes/extendlogin');
 
 app.use('/api/add-login', AddLogin);
 app.use('/api/auth', authRoute);
@@ -36,6 +39,10 @@ app.use('/api/generate-key', GenerateKey);
 app.use('/api/register', Register);
 app.use('/api/remove-login', RemoveLogin);
 app.use('/api/resethwid', resethwidRoute);
+app.use('/api/userinfo', userInfoRoute);
+app.use('/api/listusers', listUsersRoute);
+app.use('/api/extendlogin', extendLoginRoute);
+
 
 app.use((req, res) => {
     res.status(404).json({ error: 'Endpoint nicht gefunden' });
