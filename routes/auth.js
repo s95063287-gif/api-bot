@@ -23,30 +23,30 @@ router.post('/', rateLimiter, checkAndDeleteExpired, async (req, res) => {
         }
 
         if (!user) {
-            return res.status(404).json({ error: 'Discord ID não encontrado.' });
+            return res.status(404).json({ error: 'User not found.' });
         }
 
         if (user.expirationDate < new Date()) {
             await User.deleteOne({ hwid });
-            return res.status(403).json({ error: 'Login expirado. Por favor, renove seu login.' });
+            return res.status(403).json({ error: 'Login expired. Please renew your login.' });
         }
 
         if (user.username === username) {
             if (user.password) {
                 if (user.password === password) {
-                    return res.json({ message: 'Login bem-sucedido!' });
+                    return res.json({ message: 'Login successful!' });
                 } else {
-                    return res.status(403).json({ error: 'Senha incorreta.' });
+                    return res.status(403).json({ error: 'Incorrect password.' });
                 }
             } else {
-                return res.json({ message: 'Login bem-sucedido!' });
+                return res.json({ message: 'Login successful!' });
             }
         } else {
-            return res.status(403).json({ error: 'Usuário Inválido.' });
+            return res.status(403).json({ error: 'Invalid user.' });
         }
     } catch (error) {
-        console.error('Erro ao autenticar:', error);
-        res.status(500).json({ error: 'Erro ao autenticar.' });
+        console.error('Error authenticating:', error);
+        res.status(500).json({ error: 'Error authenticating.' });
     }
 });
 
