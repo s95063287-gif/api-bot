@@ -22,7 +22,7 @@ const Register = require('./routes/register');
 const RemoveLogin = require('./routes/remove-login');
 const resethwidRoute = require('./routes/resethwid');
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 
 app.use('/api', AddLogin);
 app.use('/api', authRoute);
