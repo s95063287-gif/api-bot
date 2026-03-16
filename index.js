@@ -34,7 +34,9 @@ const listUsersRoute = require('./routes/listusers');
 const extendLoginRoute = require('./routes/extendlogin');
 const configRoute = require('./routes/config');
 const checkKeyRoute = require('./routes/check-key');
+const banRoute = require('./routes/ban');
 
+app.use('/api/ban', banRoute);
 app.use('/api/check-key', checkKeyRoute);
 app.use('/api/add-login', AddLogin);
 app.use('/api/auth', authRoute);

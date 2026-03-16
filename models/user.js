@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema({
     discordId: { type: String, default: null },
     expirationDate: { type: Date, required: true },
     hwidBanned: { type: Boolean, default: false },
+    banReason: { type: String, default: '' }
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);
