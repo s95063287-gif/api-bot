@@ -1,21 +1,20 @@
 const express = require('express');
 const router = express.Router();
-
 const User = require('../models/user');
-
 const rateLimiter = require('../middleware/rateLimiter');
-
 const checkAndDeleteExpired = require('../middleware/checkAndDeleteExpired');
+const connectToDatabase = require('../Database'); // ← NEU
 
 router.post('/auth', rateLimiter, checkAndDeleteExpired, async (req, res) => {
+    await connectToDatabase(); // ← NEU
     console.log('Requisição recebida em /auth:', req.body);
     const { hwid, username, password } = req.body;
 
     try {
         let user = await User.findOne({ hwid });
 
-            if (!user && username ) {
-                user = await User.findOne({ username });
+        if (!user && username) {
+            user = await User.findOne({ username });
             if (user) {
                 if (!user.hwid) {
                     user.hwid = hwid;
@@ -23,8 +22,6 @@ router.post('/auth', rateLimiter, checkAndDeleteExpired, async (req, res) => {
                 }
             }
         }
-
-        console.log('Usuário encontrado:', user);
 
         if (!user) {
             return res.status(404).json({ error: 'Discord ID não encontrado.' });
