@@ -1,23 +1,32 @@
 const express = require('express');
 const router = express.Router();
-
 const User = require('../models/user');
-
+const Key = require('../models/key');
 const rateLimiter = require('../middleware/rateLimiter');
+const connectToDatabase = require('../Database');
 
-router.delete('/remove-login', rateLimiter, async (req, res) => {
-    const { id } = req.body;
+router.post('/', rateLimiter, async (req, res) => {
+    await connectToDatabase();
+    const { hwid, username, key, password } = req.body;
 
     try {
-        const user = await User.findByIdAndDelete(id);
-        if (!user) {
-            return res.status(404).json({ error: 'Login não encontrado' });
+        let validKey = await Key.findOne({ key, used: false, expirationDate: { $gte: new Date() } });
+        if (!validKey) {
+            return res.status(403).json({ error: 'Chave inválida ou expirada.' });
         }
 
-        res.json({ message: 'Login removido com sucesso', username: user.username });
+        validKey.used = true;
+        await validKey.save();
+
+        let expirationDate = new Date(validKey.expirationDate);
+
+        const user = new User({ hwid, username, expirationDate, password });
+        await user.save();
+
+        res.json({ message: 'Login criado com sucesso', expirationDate });
     } catch (error) {
-        console.error('Erro ao remover login:', error);
-        res.status(500).json({ error: 'Erro ao remover login' });
+        console.error('Erro ao registrar:', error);
+        res.status(500).json({ error: 'Erro ao registrar.' });
     }
 });
 

@@ -3,11 +3,10 @@ const router = express.Router();
 const User = require('../models/user');
 const rateLimiter = require('../middleware/rateLimiter');
 const checkAndDeleteExpired = require('../middleware/checkAndDeleteExpired');
-const connectToDatabase = require('../Database'); // ← NEU
+const connectToDatabase = require('../Database');
 
-router.post('/auth', rateLimiter, checkAndDeleteExpired, async (req, res) => {
-    await connectToDatabase(); // ← NEU
-    console.log('Requisição recebida em /auth:', req.body);
+router.post('/', rateLimiter, checkAndDeleteExpired, async (req, res) => {
+    await connectToDatabase();
     const { hwid, username, password } = req.body;
 
     try {

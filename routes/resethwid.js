@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
-
 const User = require('../models/user');
-
 const rateLimiter = require('../middleware/rateLimiter');
+const connectToDatabase = require('../Database');
 
-router.post('/reset-hwid', rateLimiter, async (req, res) => {
+router.post('/', rateLimiter, async (req, res) => {
+    await connectToDatabase();
     const { hwid } = req.body;
 
     try {

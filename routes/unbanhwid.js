@@ -1,12 +1,11 @@
 const express = require('express');
 const router = express.Router();
-
 const User = require('../models/user');
-
 const rateLimiter = require('../middleware/rateLimiter');
+const connectToDatabase = require('../Database');
 
-// Rota para desbanir
-router.post('/unban', rateLimiter, async (req, res) => {
+router.post('/', rateLimiter, async (req, res) => {
+    await connectToDatabase();
     const { identifier, type } = req.body;
 
     try {
