@@ -54,3 +54,5 @@ connectToDatabase().then(() => {
         console.log('Sucesso '.green + `Servidor rodando na porta`, `${PORT}`.cyan)
     );
 });
+
+MONGODB_URL = mongodb+srv://s95063287_db_user:<db_password>@cluster0.ditomhk.mongodb.net/?appName=Cluster0
