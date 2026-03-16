@@ -34,3 +34,5 @@ app.use('/api', resethwidRoute);
 connectToDatabase().then(() => {
     app.listen(PORT, () => console.log('Sucesso '.green + `Servidor rodando na porta`, `${PORT}` .cyan));
 });
+
+module.exports = app; 
