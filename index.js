@@ -33,7 +33,9 @@ const userInfoRoute = require('./routes/userinfo');
 const listUsersRoute = require('./routes/listusers');
 const extendLoginRoute = require('./routes/extendlogin');
 const configRoute = require('./routes/config');
+const checkKeyRoute = require('./routes/check-key');
 
+app.use('/api/check-key', checkKeyRoute);
 app.use('/api/add-login', AddLogin);
 app.use('/api/auth', authRoute);
 app.use('/api/generate-key', GenerateKey);
