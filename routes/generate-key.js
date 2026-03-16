@@ -4,8 +4,10 @@ const router = express.Router();
 const Key = require('../models/key')
 
 const rateLimiter = require('../middleware/rateLimiter');
+const connectToDatabase = require('../Database'); // ← NEU
 
 router.post('/generate-key', rateLimiter, async (req, res) => {
+    await connectToDatabase(); // ← NEU
     const { key, duration } = req.body; // A chave agora é passada no corpo da requisição
 
     try {
