@@ -1,36 +1,59 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/user');
-const Key = require('../models/key');
 const rateLimiter = require('../middleware/rateLimiter');
+const checkAndDeleteExpired = require('../middleware/checkAndDeleteExpired');
 const connectToDatabase = require('../Database');
 
-router.post('/', rateLimiter, async (req, res) => {
+router.post('/', rateLimiter, checkAndDeleteExpired, async (req, res) => {
     await connectToDatabase();
-    const { hwid, username, key, password, discordId } = req.body;
+    const { hwid, username, password } = req.body;
 
     try {
-        const existingUser = await User.findOne({ username });
-        if (existingUser) {
-            return res.status(400).json({ error: 'Username already taken.' });
+        // Case-insensitive suche
+        let user = await User.findOne({ hwid });
+
+        if (!user && username) {
+            user = await User.findOne({ username: { $regex: new RegExp(`^${username}$`, 'i') } });
+            if (user) {
+                if (!user.hwid) {
+                    user.hwid = hwid;
+                    await user.save();
+                }
+            }
         }
 
-        let validKey = await Key.findOne({ key, used: false, expirationDate: { $gte: new Date() } });
-        if (!validKey) {
-            return res.status(403).json({ error: 'Invalid or expired key.' });
+        if (!user) {
+            return res.status(404).json({ error: 'User not found.' });
         }
 
-        validKey.used = true;
-        await validKey.save();
+        // HWID Ban Check
+        if (user.hwidBanned) {
+            return res.status(403).json({ error: `You are banned.\nReason: ${user.banReason || 'No reason provided.'}` });
+        }
 
-        let expirationDate = new Date(validKey.expirationDate);
-        const user = new User({ hwid, username, expirationDate, password, discordId });
-        await user.save();
+        if (user.expirationDate < new Date()) {
+            await User.deleteOne({ _id: user._id });
+            return res.status(403).json({ error: 'Login expired. Please renew your login.' });
+        }
 
-        res.json({ message: 'Registration successful!', expirationDate });
+        // Case-insensitive username check
+        if (user.username.toLowerCase() === username.toLowerCase()) {
+            if (user.password) {
+                if (user.password === password) {
+                    return res.json({ message: 'Login successful!' });
+                } else {
+                    return res.status(403).json({ error: 'Incorrect password.' });
+                }
+            } else {
+                return res.json({ message: 'Login successful!' });
+            }
+        } else {
+            return res.status(403).json({ error: 'Invalid user.' });
+        }
     } catch (error) {
-        console.error('Error registering:', error);
-        res.status(500).json({ error: 'Error registering.' });
+        console.error('Error authenticating:', error);
+        res.status(500).json({ error: 'Error authenticating.' });
     }
 });
 
